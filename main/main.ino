@@ -33,10 +33,13 @@
 
 #define THREAD_SPEED 250           // Thread interval rate
 
+// front left, front right, back left, back right
+// orient, knee, foot
 int SERVOS[4][3] = {{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}};
 
 bool isConnected = false;
 bool isMoving = false;
+bool freeMode = false;
 bool hasToMoveForward = false;
 bool hasToMoveBackward = false;
 bool hasToTurnLeft = false;
@@ -52,36 +55,57 @@ Thread     BodyThread = Thread();
 BodyClass  Body;
 
 void bodyThreadCallBack() {
+
+  if(freeMode && !isMoving) {
+    Body.forward();
+    freeMode = false;
+  }
   if(hasToMoveForward && !isMoving) {
     isMoving = true;
     Body.forward();
     isMoving = hasToMoveForward = false;
   }
-  else if(hasToMoveBackward && !isMoving) {
+  if(hasToMoveBackward && !isMoving) {
     isMoving = true;
     Body.backward();
     isMoving = hasToMoveBackward = false;
   }
-  else if(hasToTurnLeft && !isMoving) {
+  if(hasToTurnLeft && !isMoving) {
     isMoving = true;
     Body.turnLeft();
     isMoving = hasToTurnLeft = false;
   }
-  else if(hasToTurnRight && !isMoving) {
+  if(hasToTurnRight && !isMoving) {
     isMoving = true;
     Body.turnRight();
     isMoving = hasToTurnRight = false;
   }
-  else if(hasToSleep && !isMoving) {
+  if(hasToSleep && !isMoving) {
     isMoving = true;
     Body.sleep();
     isMoving = hasToSleep = false;
   }
-  else if(hasToWakeUp && !isMoving) {
+  if(hasToWakeUp && !isMoving) {
     isMoving = true;
     Body.wakeUp();
     isMoving = hasToWakeUp = false;
   }
+}
+
+String readString() {
+  char buffer[32];
+  size_t recvd = 0;
+  String string;
+  recvd = Bluetooth.readBytes(buffer, 32);
+  for (size_t i = 0; i < recvd; i++) {
+    if (buffer[i] != '\n')
+      string += buffer[i];
+    else
+      break;
+  }
+  string.replace("\r","");
+  string.replace("\n","");
+  return string;
 }
 
 void setup() {
@@ -109,11 +133,13 @@ void setup() {
   if(VERBOSE) Serial.println("-- End of Setup ----");
 
   Body.init();
+
 }
 
 void loop() {
 
   BodyThread.run();
+  Bluetooth.setTimeout(100);
 
   if (Bluetooth.connected()) {
 
@@ -122,6 +148,7 @@ void loop() {
     isConnected = true;
 
     if (Bluetooth.available()) {
+
       char read = Bluetooth.read();
       if(VERBOSE) {
         Serial.print("Incoming command -> ");
@@ -154,9 +181,9 @@ void loop() {
         hasToWakeUp = true;
         if(VERBOSE) Bluetooth.println("Executing - Wake Up");
       }
+
     }
 
   }
 
 }
-

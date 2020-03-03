@@ -19,6 +19,8 @@
     private:
       bool     verbose = true;
       LegClass Legs[4];
+      int test[3] = {1, 2, 0};
+      int r_test[3] = {2, 1, 0};
 
     public:
       void     init();
@@ -29,6 +31,7 @@
       void     turnRight();
       void     sleep();
       void     wakeUp();
+      // void     printLegsPositions();
   };
 
 #endif

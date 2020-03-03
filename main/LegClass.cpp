@@ -10,29 +10,88 @@ void LegClass::init(int id) {
   servos[2].init(SERVOS[id][2], isMirroredLeg, isBackLeg, false);
 }
 
-void LegClass::reset() {
+void LegClass::reset(int orient, int knee, int foot) {
   if(verbose) Serial.println("Leg - Reset");
-  servos[0].reset();
-  servos[1].reset();
-  servos[2].reset();
+  servos[0].reset(orient);
+  servos[1].reset(knee);
+  servos[2].reset(foot);
 }
 
 void LegClass::moveTo(int orient, int knee, int foot) {
   if(verbose) Serial.println("Leg - MoveTo");
   if(isMirroredLeg) {
-    if(isBackLeg)
-      servos[0].moveTo(-orient);
-    else
-      servos[0].moveTo(orient);
     servos[1].moveTo(-knee);
     servos[2].moveTo(-foot);
+    if(isBackLeg)
+      servos[0].moveTo(-orient);
+    else
+      servos[0].moveTo(orient);
   }
   else {
+    servos[1].moveTo(knee);
+    servos[2].moveTo(foot);
     if(isBackLeg)
       servos[0].moveTo(orient);
     else
       servos[0].moveTo(-orient);
-    servos[1].moveTo(knee);
-    servos[2].moveTo(foot);
   }
+}
+
+void LegClass::goTo(int orient, int knee, int foot, int* execution_order) {
+  if(verbose) Serial.println("Leg - GoTo");
+
+  for(int i = 0; i < 3; i++) {
+    for(int y = 0; y < 3; y++) {
+      if(execution_order[i] == y) {
+
+        if(isMirroredLeg) {
+          if(y == 1) {
+            servos[1].goTo(-knee);
+            delay(delay_between_action);
+          }
+          if(y == 2) {
+            servos[2].goTo(-foot);
+            delay(delay_between_action);
+          }
+          if(isBackLeg) {
+            if(y == 0) {
+              servos[0].goTo(-orient);
+              delay(delay_between_action);
+            }
+          }
+          else {
+            if(y == 0) {
+              servos[0].goTo(orient);
+              delay(delay_between_action);
+            }
+          }
+        }
+        else {
+          if(y == 1) {
+            servos[1].goTo(knee);
+            delay(delay_between_action);
+          }
+          if(y == 2) {
+            servos[2].goTo(foot);
+            delay(delay_between_action);
+          }
+          if(isBackLeg) {
+            if(y == 0) {
+              servos[0].goTo(orient);
+              delay(delay_between_action);
+            }
+          }
+          else {
+            if(y == 0) {
+              servos[0].goTo(-orient);
+              delay(delay_between_action);
+            }
+          }
+        }
+
+      }
+    }
+
+  }
+
 }

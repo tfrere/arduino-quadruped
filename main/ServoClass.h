@@ -25,10 +25,11 @@
 
     public:
       void init(int id, bool mirror, bool back, bool orient);
-      void reset();
+      void reset(int value);
       void moveTo(int newPosition);
       void goTo(int newPosition);
       void setSpeed(int newSpeed);
+      int getPosition();
   };
 
 #endif
